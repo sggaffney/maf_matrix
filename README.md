@@ -5,9 +5,17 @@
 Simply provide a path to a maf file and a list of genes, and the script can either:
 
 <ol type="a">
-  <li>save the matrix figure (to an optional path). (The "-a" flag shows all patients.), or</li>
+  <li>save the matrix figure (to an optional path). (The "-a" flag shows all patients.), 
+  or</li>
   <li>look up the amino acid changes from Broad's Oncotator and print out text that can be used in the CBioPortal oncoprinter tool.</li>
 </ol>
+
+Example matrix image:
+
+![matrix image](images/demo_matrix.png)
+
+Example oncoprinter image:
+![oncoprinter image](images/demo_oncoprinter.png)
 
 ## Using the executable
 ```
