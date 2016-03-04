@@ -51,8 +51,9 @@ class MatrixPlotter(object):
             for gene in self.use_genes:
                 gene_labels.append(format_str.format(
                     gene=gene, pc=float(p_counts[gene]) / n_all_patients * 100))
-            pc_patients = n_patients / float(n_all_patients) * 100
-            self.title = "{n} patients ({pc:.1f}%)".format(n=n_patients,
+            n_mutated = sum(matrix_df.any(axis=1))
+            pc_patients = n_mutated / float(n_all_patients) * 100
+            self.title = "{n} patients ({pc:.1f}%)".format(n=n_mutated,
                                                            pc=pc_patients)
         else:
             gene_labels = self.use_genes
