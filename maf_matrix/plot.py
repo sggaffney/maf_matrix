@@ -51,8 +51,12 @@ class MatrixPlotter(object):
             for gene in self.use_genes:
                 gene_labels.append(format_str.format(
                     gene=gene, pc=float(p_counts[gene]) / n_all_patients * 100))
+            pc_patients = n_patients / float(n_all_patients) * 100
+            self.title = "{n} patients ({pc:.1f}%)".format(n=n_patients,
+                                                           pc=pc_patients)
         else:
             gene_labels = self.use_genes
+            self.title = "{n} patients".format(n=n_patients)
 
         self.ax_x = dict(length=pbox_lpatient * n_patients,
                          padding=90,
@@ -101,7 +105,8 @@ class MatrixPlotter(object):
                    self.ax_y['labels'])
 
         ax1.tick_params(axis=u'both', which=u'both', length=0)
-
+        ax1.annotate(self.title, xy=(1, 1), xycoords=ax1.transAxes,
+                     ha='right', va='bottom')
         return fig1
 
     def _add_grid(self, ax):
