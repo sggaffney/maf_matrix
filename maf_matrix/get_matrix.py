@@ -56,11 +56,16 @@ class MafObject(object):
     Dataframe df is set once.
     Dataframe df_sm is re-set with each update to use_genes
     """
-    def __init__(self, maf_path, lookup_aa_bool=False, show_all_patients=False):
+    def __init__(self, maf_path_or_df, lookup_aa_bool=False, show_all_patients=False):
         # TEST ARGUMENTS
-        if not os.path.isfile(maf_path):
-            raise Exception("Invalid maf path.")
-        self.maf_path = maf_path
+        if type(maf_path_or_df) == str:
+            if not os.path.isfile(maf_path_or_df):
+                raise ValueError("Invalid maf path.")
+            self.maf_path = maf_path_or_df
+            df_in = None
+        elif type(maf_path_or_df) == pd.core.frame.DataFrame:
+            df_in = maf_path_or_df
+
         self.lookup_aa_bool = lookup_aa_bool
         self.show_all_patients = show_all_patients
         self.patient_col = None
@@ -72,7 +77,7 @@ class MafObject(object):
         self.start_col = None
         self.end_col = None
         self.n_all_patients = None
-        self.df = self._get_maf_df()
+        self.df = self._get_maf_df(df_in)
 
         # gene-list dependent
         self._use_genes = None
@@ -92,11 +97,14 @@ class MafObject(object):
         self.df_sm = self._get_df_sm()
         self.matrix = self.get_matrix()
 
-    def _get_maf_df(self):
+    def _get_maf_df(self, df_in=None):
         """Populate column name attributes and whole-maf dataframe."""
-        read_kwargs = dict(sep='\t', comment='#')
-        df = pd.read_csv(self.maf_path, **read_kwargs)
-        df.rename(columns=str.lower, inplace=True)
+        if df_in is None:
+            read_kwargs = dict(sep='\t', comment='#')
+            df = pd.read_csv(self.maf_path, **read_kwargs)
+        else:
+            df = df_in
+        df.rename(columns=lambda c: c.lower(), inplace=True)
         # GET COLUMN NAMES
         hugo_col = [i for i in df.columns if 'hugo' in i][0]
         chrom_col = [i for i in df.columns if 'chrom' in i][0]
@@ -231,7 +239,8 @@ class MafObject(object):
     def save_matrix(self, out_path=None):
         if not out_path:
             d = datetime.utcnow()
-            maf_dir = os.path.dirname(self.maf_path)
+            maf_dir = os.path.dirname(self.maf_path) \
+                if self.maf_path else os.getcwd()
             fig_name = 'matrix_' + d.strftime('%Y-%m-%d_%H%M%S%f') + '.pdf'
             out_path = os.path.join(maf_dir, fig_name)
         fig1 = self.plot_matrix()
