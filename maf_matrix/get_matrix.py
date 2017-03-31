@@ -14,8 +14,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-__author__ = 'Stephen G. Gaffney'
 
+from __future__ import print_function
+# noinspection PyCompatibility
+from builtins import input
 import os
 import json
 import argparse
@@ -26,7 +28,10 @@ import pandas as pd
 import requests
 import numpy as np
 
-from maf_matrix.plot import MatrixPlotter
+from .plot import MatrixPlotter
+
+
+__author__ = 'Stephen G. Gaffney'
 
 test_maf_path = 'chol_combined_removed_hypermutated_AA39.maf'
 test_use_genes = ['KRAS', 'TP53', 'MUC4']
@@ -106,8 +111,10 @@ class MafObject(object):
             df = df_in
         df.rename(columns=lambda c: c.lower(), inplace=True)
         # GET COLUMN NAMES
-        hugo_col = [i for i in df.columns if 'hugo' in i][0]
-        chrom_col = [i for i in df.columns if 'chrom' in i][0]
+        hugo_col = [i for i in df.columns if 'hugo' in i
+                    or 'symbol' in i or 'gene' in i][0]
+        chrom_col = [i for i in df.columns if 'chrom' in i
+                     or i.startswith('chr')][0]
         class_col = [i for i in df.columns if 'classification' in i][0]
         ref_col = [i for i in df.columns if 'reference' in i][0]
         start_col = [i for i in df.columns if 'start' in i][0]
@@ -184,7 +191,7 @@ class MafObject(object):
 
         # RE-SORT BY WEIGHT (powers of 2)
         n_genes = len(self.use_genes)
-        twos = np.power(2, xrange(n_genes-1, -1, -1))  # gene weights
+        twos = np.power(2, range(n_genes-1, -1, -1))  # gene weights
         twos_dict = dict(matrix.apply(lambda r: sum(r*twos), axis=1))
         use_patients.sort(key=lambda i: twos_dict[i], reverse=True)
         self.use_patients = use_patients
@@ -206,25 +213,25 @@ class MafObject(object):
             self.lookup_aa_bool = True
             self.df_sm = self._get_df_sm()
             self.get_matrix()
-        print "\t".join(['sample', 'gene', 'alteration'])
+        print("\t".join(['sample', 'gene', 'alteration']))
         for gene in self.matrix.columns:
-            for patient, has_mutation in self.matrix[gene].iteritems():
+            for patient, has_mutation in iter(self.matrix[gene].items()):
                 if has_mutation:
                     if self.lookup_aa_bool:
                         aa_changes = ','.join(self.df_sm.loc[
                             (self.df[self.hugo_col] == gene)
                             & (self.df[self.patient_col] == patient),
                             'aa_change'])
-                        print "{}\t{}\t{}".format(patient, gene, aa_changes)
+                        print("{}\t{}\t{}".format(patient, gene, aa_changes))
                     else:
-                        print "{}\t{}\t{}".format(patient, gene, 'Y')
+                        print("{}\t{}\t{}".format(patient, gene, 'Y'))
         for patient in self.extra_patients:
-            print patient + '\t\t'
+            print(patient + '\t\t')
 
     def get_oncoprintjs_json(self):
         data = []
         for gene in self.matrix.columns:
-            for patient, has_mutation in self.matrix[gene].iteritems():
+            for patient, has_mutation in iter(self.matrix[gene].items()):
                 d = dict(sample=patient, gene=gene)
                 if has_mutation:
                     d['mutation'] = True
@@ -232,7 +239,9 @@ class MafObject(object):
         return json.dumps(data)
 
     def plot_matrix(self):
-        mp = MatrixPlotter(self.matrix, n_all_patients=self.n_all_patients)
+        show_title = False if self.show_all_patients else True
+        mp = MatrixPlotter(self.matrix, n_all_patients=self.n_all_patients,
+                           show_title=show_title)
         fig1 = mp.draw_matrix()
         return fig1
 
@@ -284,7 +293,7 @@ if __name__ == '__main__':
         m.print_oncoprinter_text()
     else:
         if outfile_exists:
-            overwrite = raw_input("Overwrite {}? (y/n): ".format(args.out_path))
+            overwrite = input("Overwrite {}? (y/n): ".format(args.out_path))
             if overwrite.lower() == 'y':
                 overwrite_bool = True
 

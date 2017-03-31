@@ -20,11 +20,11 @@ import matplotlib.collections as collections
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import numpy as np
-from collections import defaultdict
+
 
 class MatrixPlotter(object):
 
-    def __init__(self, matrix_df, n_all_patients=None):
+    def __init__(self, matrix_df, n_all_patients=None, show_title=True):
         """Generate matrix plot using matrix dataframe.
 
         Args:
@@ -38,7 +38,6 @@ class MatrixPlotter(object):
         pbox_lgene = 25  # gene box width (pixels)
         pbox_lpatient = 25  # patient box width (pixels)
         self.dpi = 60
-
         n_genes = len(self.use_genes)
         n_patients = len(self.use_patients)
 
@@ -53,11 +52,13 @@ class MatrixPlotter(object):
                     gene=gene, pc=float(p_counts[gene]) / n_all_patients * 100))
             n_mutated = sum(matrix_df.any(axis=1))
             pc_patients = n_mutated / float(n_all_patients) * 100
-            self.title = "{n} patients ({pc:.1f}%)".format(n=n_mutated,
-                                                           pc=pc_patients)
+            if show_title:
+                self.title = "{n} patients ({pc:.1f}%)".\
+                    format(n=n_mutated, pc=pc_patients)
         else:
             gene_labels = self.use_genes
-            self.title = "{n} patients".format(n=n_patients)
+            if show_title:
+                self.title = "{n} patients".format(n=n_patients)
 
         self.ax_x = dict(length=pbox_lpatient * n_patients,
                          padding=90,
@@ -122,8 +123,8 @@ class MatrixPlotter(object):
 
         'labels', 'padding', 'length', 'num', 'boxlen'
         """
-        n_x = self.ax_x['length'] / self.ax_x['boxlen']
-        n_y = self.ax_y['length'] / self.ax_y['boxlen']
+        n_x = int(self.ax_x['length'] / self.ax_x['boxlen'])
+        n_y = int(self.ax_y['length'] / self.ax_y['boxlen'])
         # draw X grid
         if n_x > 1:
             xy_start = np.vstack((self.ax_x['boxlen'] *

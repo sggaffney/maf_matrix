@@ -11,7 +11,7 @@ setup(name='maf_matrix',
       license='GPLv3',
       packages=['maf_matrix'],
       install_requires=[
-          'pandas', 'requests', 'numpy', 'matplotlib'
+          'pandas', 'requests', 'numpy', 'matplotlib', 'future'
       ],
       test_suite='nose.collector',
       tests_require=['nose'],
