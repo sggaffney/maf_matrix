@@ -29,7 +29,6 @@ class GeneMatrix:
             all_patients (list): list of all patient IDs. if not provided,
                 this is deduced from maf object.
         """
-
         df_in = maf_obj.df
         if not all_patients:
             all_patients = sorted(list(df_in[maf_obj.patient_col].unique()))
