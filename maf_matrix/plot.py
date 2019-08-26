@@ -20,10 +20,11 @@ import matplotlib.patches as patches
 import matplotlib.collections as collections
 from matplotlib.transforms import Bbox
 
+from collections import OrderedDict
 
 __author__ = 'Stephen G. Gaffney'
 
-COLOR_DICT = {
+COLOR_DICT = OrderedDict({
     'missense_mutation': (0.0, 0.4470588235294118, 0.6980392156862745),
     'nonsense_mutation': (0.0, 0.6196078431372549, 0.45098039215686275),
     'nonstop_mutation':
@@ -35,7 +36,10 @@ COLOR_DICT = {
         (0.33725490196078434, 0.7058823529411765, 0.9137254901960784),
     'other':
         (0.8, 0.4745098039215686, 0.6549019607843137)
-}
+})
+
+ANNOT_DEFAULTS = dict(fontsize=16, fontweight='bold',
+                      fontname='Apple Symbols', color='w')
 
 
 class MatrixPlotter(object):
@@ -95,9 +99,16 @@ class MatrixPlotter(object):
             patient_labels.append(label)
         self.patient_labels = patient_labels
 
-    def draw_matrix(self, fontsize=10, max_label=100, box_px=30,
-                    show_limits=False):
+    def draw_matrix(self, max_label=100, box_px=30, annot_kws=None,
+                    show_limits=False, show_legend=True):
         """Generate matrix figure."""
+        if annot_kws is None:
+            annot_kws = ANNOT_DEFAULTS.copy()
+        else:  # update default kws with provided kws
+            new_kws = annot_kws.copy()
+            annot_kws = ANNOT_DEFAULTS.copy()
+            annot_kws.update(new_kws)
+
         # figsize = [(self.ax_x['length'] + self.ax_x['padding']) / self.upi,
         #            (self.ax_y['length'] + self.ax_y['padding']) / self.upi]
 
@@ -154,8 +165,7 @@ class MatrixPlotter(object):
             self._add_box(p_ind, g_ind, ax, color=color)
             # annot = self.matrix_df.iloc[g_ind, p_ind]
             if type(annot) == str:
-                self._add_annot(p_ind, g_ind, ax, annot, fontsize=fontsize,
-                                fontweight='bold')
+                self._add_annot(p_ind, g_ind, ax, annot, annot_kws=annot_kws)
         # WHITE LINE GRID
         self._add_grid(ax)
 
@@ -163,7 +173,7 @@ class MatrixPlotter(object):
         ax.axes.get_xaxis().set_visible(False)
         ax.axes.get_yaxis().set_visible(False)
         ax.tick_params(axis=u'both', which=u'both', length=0)
-
+        fontsize = annot_kws.get('fontsize', 16)
         labels = self._add_ax_labels(fontsize=fontsize)
         obj_list.extend(labels)
 
@@ -202,6 +212,19 @@ class MatrixPlotter(object):
         hfig.set_figwidth(fwidth_in)
         hfig.set_figheight(fheight_in)
 
+        # LEGEND
+        if show_legend:
+            # get legend classes, in COLOR_DICT order.
+            in_legend = set(self.info_df.var_class.unique())
+            in_legend = [i for i in COLOR_DICT if i in in_legend] + \
+                list(in_legend.difference(set(COLOR_DICT)))
+            colors = [COLOR_DICT[i] if i in COLOR_DICT else COLOR_DICT['other']
+                      for i in in_legend]
+            handles = [patches.Patch(facecolor=col, edgecolor='w', label=label)
+                       for col, label in zip(colors, in_legend)]
+
+            hfig.legend(handles=handles, loc='upper left', bbox_to_anchor=(1, 1),
+                        frameon=False, borderaxespad=1)
         return hfig, ax
 
     def _add_grid(self, ax):
@@ -254,13 +277,11 @@ class MatrixPlotter(object):
         rect = patches.Rectangle((l, b), w, h, fc=color, ec='none')
         ax.add_patch(rect)
 
-    def _add_annot(self, x_i, y_i, ax, annot, fontsize=8, fontweight='bold',
-                   color='w'):
+    def _add_annot(self, x_i, y_i, ax, annot, annot_kws=None):
         """Add annotation string to mutation box using x,y index."""
         x = x_i * self.ax_x['boxlen'] + self.ax_x['boxlen'] / 2
         y = y_i * self.ax_y['boxlen'] + self.ax_y['boxlen'] / 2
-        t = ax.text(x, y, annot, ha='center', va='center',
-                    fontsize=fontsize, color=color, fontweight=fontweight)
+        t = ax.text(x, y, annot, ha='center', va='center', **annot_kws)
         return t
 
     def _add_ax_labels(self, fontsize=10):

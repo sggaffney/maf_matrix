@@ -93,11 +93,13 @@ class GeneMatrix:
 
         # REDUCE TO ONE ROW PER PATIENT-GENE PAIR
         if has_annot or has_class:
+            df['n_muts'] = 1
             df = df.groupby(['patient', 'hugo']).agg({
                     'annot': self._series_to_str,
-                    'var_class': lambda s: s.iloc[0],
-                    'aa_change': lambda s: '|'.join([str(i) for i in list(s) if
-                                                     i]),
+                    'var_class': lambda s: '|'.join([str(i) for i in s.unique()]),
+                    'aa_change': lambda s: '|'.join([str(i) for i in s
+                                                     if not pd.np.isnan(i)]),
+                    'n_muts': sum,
                 }).reset_index()
 
         df.set_index(['patient', 'hugo'], inplace=True)
@@ -185,14 +187,14 @@ class GeneMatrix:
         return hfig, ax
 
     def plot_matrix(self, color_dict=None, show_title=True,
-                    show_all_patients=False):
+                    show_all_patients=False, annot_kws=None):
         if not color_dict:
             color_dict = COLOR_DICT
         mp = MatrixPlotter(self.matrix, self.df, color_dict=color_dict,
                            n_all_patients=self.n_all_patients,
                            show_title=show_title,
                            show_all_patients=show_all_patients)
-        hfig, ax = mp.draw_matrix(fontsize=16, box_px=30)
+        hfig, ax = mp.draw_matrix(box_px=30, annot_kws=annot_kws)
         return hfig, ax
 
     def save_matrix(self, out_path=None, **plot_kwargs):
@@ -212,6 +214,8 @@ class GeneMatrix:
         vals = sorted(list(s.unique()))
         if len(vals) == 1:
             return str(vals[0])
+        if len(vals) == 2:
+            return "{}{}".format(*vals)
         else:
             return str(vals[0]) + '+'
 
