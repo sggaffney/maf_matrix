@@ -5,12 +5,14 @@ import os
 import argparse
 from maf_matrix import MafObject
 
+
 def extant_file(file_path):
     """'Type' for argparse - checks that file exists but does not open."""
     if not os.path.isfile(file_path):
         raise argparse.ArgumentTypeError(
             "{0} does not exist".format(file_path))
     return file_path
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-i", "--maf_path",

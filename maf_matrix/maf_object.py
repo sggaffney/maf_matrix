@@ -67,7 +67,8 @@ class MafObject(object):
         sample_col = [i for i in df.columns if 'tumor_sample_barcode' in i or
                       i.startswith('sample')]
         sample_col = sample_col[0] if sample_col else None
-        patient_col = [i for i in df.columns if i.startswith('patient')]
+        patient_col = [i for i in df.columns if i.startswith('patient')
+                       or i.startswith('case')]
 
         if alt_cols:
             alt_col = 'alt'

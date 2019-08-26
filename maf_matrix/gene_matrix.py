@@ -26,14 +26,22 @@ class GeneMatrix:
             maf_obj (MafObject)
             genes (iterable): genes to be present in matrix
             annot (dict or str): {(hugo, patient): annot (str)} or m_df column
-            all_patients (list): list of all patient IDs. if not provided,
-                this is deduced from maf object.
+            hypermutated (list): optional list of hypermutated patients
+            n_all_patients (int): optional patient count (for coverage
+                calculation). deduced from all_patients if not specified.
+            all_patients (list): list of all patient IDs for showing non-mutated
+                cases. deduced from maf object if not specified.
+            trim_genes (bool): only show genes with mutations among cases.
+            lookup_aa (bool): identify amino acid change via reference lookup.
         """
         df_in = maf_obj.df
         if not all_patients:
             all_patients = sorted(list(df_in[maf_obj.patient_col].unique()))
         if not n_all_patients:
             n_all_patients = len(all_patients)
+        # remove any duplicate genes
+        genes = list(genes)
+        genes = [genes[i] for i in set([genes.index(i) for i in genes])]
 
         # FILTER GENES
         df = df_in[df_in[maf_obj.hugo_col].isin(genes)].copy()
